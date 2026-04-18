@@ -486,6 +486,38 @@
     return 1.5 + Math.sqrt(pop) * 1.4;
   }
 
+  // --- DECORATIVE RINGS ---
+  function addRing(latDeg, color, opacity) {
+    const points = [];
+    const r2 = R * Math.cos(latDeg * Math.PI / 180) + 1;
+    const y  = R * Math.sin(latDeg * Math.PI / 180);
+    for (let i = 0; i <= 128; i++) {
+      const a = (i / 128) * Math.PI * 2;
+      points.push(new THREE.Vector3(Math.cos(a) * r2, y, Math.sin(a) * r2));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
+    pivot.add(new THREE.Line(geo, mat));
+  }
+  addRing(0,    0x00ffff, 0.35); // equator
+  addRing( 23.5, 0x004466, 0.2); // tropic of cancer
+  addRing(-23.5, 0x004466, 0.2); // tropic of capricorn
+  addRing( 66.5, 0x002233, 0.15); // arctic circle
+  addRing(-66.5, 0x002233, 0.15); // antarctic circle
+
+  // Atmospheric rim glow (large back-face shell)
+  const atmGeo = new THREE.SphereGeometry(R + 14, 64, 64);
+  const atmMat = new THREE.MeshBasicMaterial({
+    color: 0x0033aa, transparent: true, opacity: 0.07, side: THREE.BackSide
+  });
+  pivot.add(new THREE.Mesh(atmGeo, atmMat));
+
+  const atm2Geo = new THREE.SphereGeometry(R + 28, 64, 64);
+  const atm2Mat = new THREE.MeshBasicMaterial({
+    color: 0x001155, transparent: true, opacity: 0.04, side: THREE.BackSide
+  });
+  pivot.add(new THREE.Mesh(atm2Geo, atm2Mat));
+
   // --- CITY BUBBLE CLUSTERS ---
   const cityMeshes = []; // for raycasting tooltips
 
