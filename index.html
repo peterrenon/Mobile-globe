@@ -10,11 +10,76 @@
     #container { width: 100vw; height: 100vh; }
     canvas { display: block; }
     #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 14px; letter-spacing: 4px; color: #00FFFF; text-shadow: 0 0 20px #00FFFF; }
+    #title { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; }
+    #title h1 { font-size: 22px; font-weight: 300; letter-spacing: 8px; text-transform: uppercase; color: #00FFFF; text-shadow: 0 0 20px #00FFFF, 0 0 40px #0088ff; }
+    #title p  { font-size: 10px; letter-spacing: 3px; color: #006688; margin-top: 4px; }
+    #legend { position: fixed; bottom: 28px; left: 28px; pointer-events: none; }
+    .leg-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #006688; margin-bottom: 7px; }
+    .leg-bar { width: 180px; height: 7px; background: linear-gradient(to right,#00ffaa,#00aaff,#ffff00,#ff8800,#ff2200,#ff00ff); border-radius: 3px; box-shadow: 0 0 10px rgba(0,255,200,0.4); margin-bottom: 5px; }
+    .leg-labels { display: flex; justify-content: space-between; width: 180px; font-size: 9px; color: #004455; }
+    .leg-sizes { margin-top: 14px; }
+    .leg-circles { display: flex; align-items: flex-end; gap: 10px; margin-top: 6px; }
+    .leg-circle { border-radius: 50%; background: rgba(0,255,170,0.15); border: 1px solid #00ffaa; box-shadow: 0 0 6px rgba(0,255,170,0.4); }
+    .leg-clabels { display: flex; gap: 10px; margin-top: 4px; font-size: 8px; color: #004455; }
+    .leg-clabels span { text-align: center; }
+    #tooltip { position: fixed; background: rgba(0,6,18,0.92); border: 1px solid #00FFFF; border-radius: 4px; padding: 10px 14px; font-size: 12px; pointer-events: none; display: none; z-index: 100; box-shadow: 0 0 20px rgba(0,255,255,0.25); min-width: 160px; }
+    #tooltip .tt-name { font-size: 13px; color: #00FFFF; letter-spacing: 2px; margin-bottom: 6px; font-weight: bold; }
+    #tooltip .tt-row  { color: #005577; font-size: 11px; margin: 2px 0; }
+    #tooltip .tt-row span { color: #00ffaa; }
+    #corner { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    .c { position: fixed; width: 28px; height: 28px; }
+    .c.tl { top:10px; left:10px;  border-top:1px solid #00FFFF; border-left:1px solid #00FFFF; }
+    .c.tr { top:10px; right:10px; border-top:1px solid #00FFFF; border-right:1px solid #00FFFF; }
+    .c.bl { bottom:10px; left:10px;  border-bottom:1px solid #00FFFF; border-left:1px solid #00FFFF; }
+    .c.br { bottom:10px; right:10px; border-bottom:1px solid #00FFFF; border-right:1px solid #00FFFF; }
+    #scanline { position: fixed; top:0; left:0; width:100%; height:2px; background:linear-gradient(to right,transparent,rgba(0,255,255,0.08),transparent); animation: scan 6s linear infinite; pointer-events:none; z-index:5; }
+    @keyframes scan { 0%{top:0;opacity:1} 95%{opacity:0.3} 100%{top:100%;opacity:0} }
+    #citycount { position: fixed; top: 80px; right: 22px; font-size: 9px; letter-spacing: 2px; color: #003344; text-align: right; pointer-events: none; }
   </style>
 </head>
 <body>
   <div id="container"></div>
   <div id="loading">INITIALISING GLOBE...</div>
+
+  <div id="title">
+    <h1>Population Density Globe</h1>
+    <p>Cities &gt; 500K &nbsp;&bull;&nbsp; Source: Wikipedia / CIA World Factbook 2023</p>
+  </div>
+
+  <div id="legend">
+    <div class="leg-title">Population Density /km²</div>
+    <div class="leg-bar"></div>
+    <div class="leg-labels"><span>Low</span><span>Med</span><span>High</span><span>Extreme</span></div>
+    <div class="leg-sizes">
+      <div class="leg-title">Metro Population</div>
+      <div class="leg-circles">
+        <div class="leg-circle" style="width:8px;height:8px"></div>
+        <div class="leg-circle" style="width:13px;height:13px"></div>
+        <div class="leg-circle" style="width:20px;height:20px"></div>
+        <div class="leg-circle" style="width:30px;height:30px"></div>
+      </div>
+      <div class="leg-clabels">
+        <span style="width:8px">0.5M</span>
+        <span style="width:13px">5M</span>
+        <span style="width:20px">15M</span>
+        <span style="width:30px">35M+</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="tooltip">
+    <div class="tt-name" id="tt-name"></div>
+    <div class="tt-row">Country: <span id="tt-country"></span></div>
+    <div class="tt-row">Population: <span id="tt-pop"></span></div>
+    <div class="tt-row">Density: <span id="tt-density"></span>/km²</div>
+  </div>
+
+  <div id="corner">
+    <div class="c tl"></div><div class="c tr"></div>
+    <div class="c bl"></div><div class="c br"></div>
+  </div>
+  <div id="scanline"></div>
+  <div id="citycount"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
   // City data: name, country, lat, lon, pop (millions), density/km²
@@ -558,6 +623,7 @@
   }
   animate();
   document.getElementById('loading').style.display = 'none';
+  document.getElementById('citycount').textContent = window.CITIES.length + ' CITIES MAPPED';
   </script>
 </body>
 </html>
