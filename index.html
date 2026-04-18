@@ -392,6 +392,35 @@
   sun.position.set(400, 200, 300);
   scene.add(sun);
 
+  // --- HELPERS ---
+
+  // Convert lat/lon to XYZ on sphere surface
+  function latLonToXYZ(lat, lon, r) {
+    const phi   = (90 - lat) * Math.PI / 180;
+    const theta = (lon + 180) * Math.PI / 180;
+    return new THREE.Vector3(
+      -r * Math.sin(phi) * Math.cos(theta),
+       r * Math.cos(phi),
+       r * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+
+  // Map population density → neon colour
+  // cyan(low) → blue → yellow → orange → red → magenta(extreme)
+  function densityColour(d) {
+    if (d <  1000) return new THREE.Color(0x00ffaa); // cyan-green
+    if (d <  3000) return new THREE.Color(0x00aaff); // blue
+    if (d <  6000) return new THREE.Color(0xffff00); // yellow
+    if (d < 10000) return new THREE.Color(0xff8800); // orange
+    if (d < 20000) return new THREE.Color(0xff2200); // red
+    return           new THREE.Color(0xff00ff);       // magenta (extreme)
+  }
+
+  // Bubble radius scaled by metro population (millions), sqrt for visual balance
+  function popRadius(pop) {
+    return 1.5 + Math.sqrt(pop) * 1.4;
+  }
+
   // Render loop placeholder — will be replaced when all elements added
   function animate() {
     requestAnimationFrame(animate);
