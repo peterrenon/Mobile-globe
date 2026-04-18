@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Population Density Globe</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000008; overflow: hidden; font-family: 'Courier New', monospace; color: #00FFFF; }
+    #container { width: 100vw; height: 100vh; }
+    canvas { display: block; }
+    #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 14px; letter-spacing: 4px; color: #00FFFF; text-shadow: 0 0 20px #00FFFF; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="loading">INITIALISING GLOBE...</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // DATA, SCENE, CITIES will be added in subsequent steps
+    window.GLOBE_CONFIG = { radius: 200, cityData: [] };
+  </script>
+</body>
+</html>
