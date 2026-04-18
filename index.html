@@ -332,6 +332,37 @@
     {n:"Asuncion",c:"Paraguay",lat:-25.28,lon:-57.65,pop:2.4,d:3100},
     {n:"Montevideo",c:"Uruguay",lat:-34.90,lon:-56.19,pop:1.8,d:2900},
   ];
+
+  // --- SCENE SETUP ---
+  const W = window.innerWidth, H = window.innerHeight;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, W/H, 1, 5000);
+  camera.position.z = 600;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x000008);
+  document.getElementById('container').appendChild(renderer.domElement);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Globe pivot — all globe objects attach here for rotation
+  const pivot = new THREE.Group();
+  scene.add(pivot);
+
+  // Render loop placeholder — will be replaced when all elements added
+  function animate() {
+    requestAnimationFrame(animate);
+    pivot.rotation.y += 0.001;
+    renderer.render(scene, camera);
+  }
+  animate();
+  document.getElementById('loading').style.display = 'none';
   </script>
 </body>
 </html>
