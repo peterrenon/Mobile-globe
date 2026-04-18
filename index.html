@@ -351,9 +351,46 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
+  // --- STARFIELD ---
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 6000;
+  const starPos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 4000;
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, transparent: true, opacity: 0.7 });
+  scene.add(new THREE.Points(starGeo, starMat));
+
   // Globe pivot — all globe objects attach here for rotation
   const pivot = new THREE.Group();
   scene.add(pivot);
+
+  // --- GLOBE SPHERE ---
+  const R = 200;
+  const globeGeo = new THREE.SphereGeometry(R, 64, 64);
+  const globeMat = new THREE.MeshPhongMaterial({
+    color: 0x000820,
+    emissive: 0x001030,
+    transparent: true,
+    opacity: 0.92,
+    wireframe: false,
+  });
+  pivot.add(new THREE.Mesh(globeGeo, globeMat));
+
+  // Globe wireframe grid overlay (lat/lon lines)
+  const wireGeo = new THREE.SphereGeometry(R + 0.5, 36, 18);
+  const wireMat = new THREE.MeshBasicMaterial({ color: 0x003366, wireframe: true, transparent: true, opacity: 0.18 });
+  pivot.add(new THREE.Mesh(wireGeo, wireMat));
+
+  // Outer glow shell
+  const glowGeo = new THREE.SphereGeometry(R + 6, 64, 64);
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x0044aa, transparent: true, opacity: 0.04, side: THREE.BackSide });
+  pivot.add(new THREE.Mesh(glowGeo, glowMat));
+
+  // Ambient + directional light
+  scene.add(new THREE.AmbientLight(0x112244, 1.2));
+  const sun = new THREE.DirectionalLight(0x4488ff, 1.5);
+  sun.position.set(400, 200, 300);
+  scene.add(sun);
 
   // Render loop placeholder — will be replaced when all elements added
   function animate() {
