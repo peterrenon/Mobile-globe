@@ -421,6 +421,61 @@
     return 1.5 + Math.sqrt(pop) * 1.4;
   }
 
+  // --- CITY BUBBLE CLUSTERS ---
+  const cityMeshes = []; // for raycasting tooltips
+
+  window.CITIES.forEach(city => {
+    const base = latLonToXYZ(city.lat, city.lon, R);
+    const col  = densityColour(city.d);
+    const r    = popRadius(city.pop);
+    const group = new THREE.Group();
+    group.position.copy(base);
+    group.lookAt(new THREE.Vector3(0,0,0)); // orient outward
+
+    // Main central bubble
+    const mainGeo = new THREE.SphereGeometry(r, 16, 16);
+    const mainMat = new THREE.MeshPhongMaterial({
+      color: col, emissive: col, emissiveIntensity: 0.6,
+      transparent: true, opacity: 0.85
+    });
+    const mainMesh = new THREE.Mesh(mainGeo, mainMat);
+    mainMesh.position.set(0, 0, -r); // sit on globe surface
+    mainMesh.userData = city;
+    cityMeshes.push(mainMesh);
+    group.add(mainMesh);
+
+    // Glow halo around main bubble
+    const haloGeo = new THREE.SphereGeometry(r * 1.8, 16, 16);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: col, transparent: true, opacity: 0.08, side: THREE.BackSide
+    });
+    const halo = new THREE.Mesh(haloGeo, haloMat);
+    halo.position.copy(mainMesh.position);
+    group.add(halo);
+
+    // Satellite micro-bubbles (count scales with population)
+    const satCount = Math.min(6, Math.floor(city.pop / 2));
+    for (let i = 0; i < satCount; i++) {
+      const angle  = (i / satCount) * Math.PI * 2;
+      const spread = r * 1.6;
+      const sr     = r * 0.35;
+      const satGeo = new THREE.SphereGeometry(sr, 8, 8);
+      const satMat = new THREE.MeshPhongMaterial({
+        color: col, emissive: col, emissiveIntensity: 0.5,
+        transparent: true, opacity: 0.7
+      });
+      const sat = new THREE.Mesh(satGeo, satMat);
+      sat.position.set(
+        Math.cos(angle) * spread,
+        Math.sin(angle) * spread,
+        -r * 0.6
+      );
+      group.add(sat);
+    }
+
+    pivot.add(group);
+  });
+
   // Render loop placeholder — will be replaced when all elements added
   function animate() {
     requestAnimationFrame(animate);
