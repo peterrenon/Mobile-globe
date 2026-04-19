@@ -6,35 +6,35 @@
   <title>Population Density Globe</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000008; overflow: hidden; font-family: 'Courier New', monospace; color: #00FFFF; }
+    body { background: #080c14; overflow: hidden; font-family: 'Arial', sans-serif; color: #c8d4e0; }
     #container { width: 100vw; height: 100vh; }
     canvas { display: block; }
-    #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 14px; letter-spacing: 4px; color: #00FFFF; text-shadow: 0 0 20px #00FFFF; }
-    #title { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; }
-    #title h1 { font-size: 22px; font-weight: 300; letter-spacing: 8px; text-transform: uppercase; color: #00FFFF; text-shadow: 0 0 20px #00FFFF, 0 0 40px #0088ff; }
-    #title p  { font-size: 10px; letter-spacing: 3px; color: #006688; margin-top: 4px; }
-    #legend { position: fixed; bottom: 28px; left: 28px; pointer-events: none; }
-    .leg-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #006688; margin-bottom: 7px; }
-    .leg-bar { width: 180px; height: 7px; background: linear-gradient(to right,#00ffaa,#00aaff,#ffff00,#ff8800,#ff2200,#ff00ff); border-radius: 3px; box-shadow: 0 0 10px rgba(0,255,200,0.4); margin-bottom: 5px; }
-    .leg-labels { display: flex; justify-content: space-between; width: 180px; font-size: 9px; color: #004455; }
+    #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 12px; letter-spacing: 4px; color: #8a9bb0; font-family: 'Arial', sans-serif; }
+    #title { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; white-space: nowrap; }
+    #title h1 { font-size: 18px; font-weight: 400; letter-spacing: 5px; text-transform: uppercase; color: #e8e8e8; }
+    #title p  { font-size: 10px; letter-spacing: 2px; color: #4a6080; margin-top: 5px; text-transform: uppercase; }
+    #divider  { width: 60px; height: 1px; background: #d4af37; margin: 6px auto 0; }
+    #legend { position: fixed; bottom: 28px; left: 28px; pointer-events: none; background: rgba(8,12,20,0.75); border: 1px solid #1a2a3a; padding: 14px 16px; border-radius: 2px; }
+    .leg-title { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #4a6080; margin-bottom: 7px; }
+    .leg-bar { width: 180px; height: 6px; background: linear-gradient(to right,#1a6b9a,#2e7d52,#c17f24,#b5451b,#7b2d8b); border-radius: 1px; margin-bottom: 5px; }
+    .leg-labels { display: flex; justify-content: space-between; width: 180px; font-size: 8px; color: #3a5070; }
     .leg-sizes { margin-top: 14px; }
     .leg-circles { display: flex; align-items: flex-end; gap: 10px; margin-top: 6px; }
-    .leg-circle { border-radius: 50%; background: rgba(0,255,170,0.15); border: 1px solid #00ffaa; box-shadow: 0 0 6px rgba(0,255,170,0.4); }
-    .leg-clabels { display: flex; gap: 10px; margin-top: 4px; font-size: 8px; color: #004455; }
+    .leg-circle { border-radius: 50%; background: rgba(212,175,55,0.1); border: 1px solid #d4af37; }
+    .leg-clabels { display: flex; gap: 10px; margin-top: 4px; font-size: 8px; color: #3a5070; }
     .leg-clabels span { text-align: center; }
-    #tooltip { position: fixed; background: rgba(0,6,18,0.92); border: 1px solid #00FFFF; border-radius: 4px; padding: 10px 14px; font-size: 12px; pointer-events: none; display: none; z-index: 100; box-shadow: 0 0 20px rgba(0,255,255,0.25); min-width: 160px; }
-    #tooltip .tt-name { font-size: 13px; color: #00FFFF; letter-spacing: 2px; margin-bottom: 6px; font-weight: bold; }
-    #tooltip .tt-row  { color: #005577; font-size: 11px; margin: 2px 0; }
-    #tooltip .tt-row span { color: #00ffaa; }
+    #tooltip { position: fixed; background: rgba(8,12,20,0.95); border: 1px solid #1e3050; border-left: 2px solid #d4af37; border-radius: 2px; padding: 10px 14px; font-size: 12px; pointer-events: none; display: none; z-index: 100; min-width: 180px; }
+    #tooltip .tt-name { font-size: 13px; color: #e8e8e8; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; border-bottom: 1px solid #1a2a3a; padding-bottom: 6px; }
+    #tooltip .tt-row  { color: #4a6080; font-size: 11px; margin: 3px 0; }
+    #tooltip .tt-row span { color: #d4af37; float: right; margin-left: 16px; }
     #corner { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-    .c { position: fixed; width: 28px; height: 28px; }
-    .c.tl { top:10px; left:10px;  border-top:1px solid #00FFFF; border-left:1px solid #00FFFF; }
-    .c.tr { top:10px; right:10px; border-top:1px solid #00FFFF; border-right:1px solid #00FFFF; }
-    .c.bl { bottom:10px; left:10px;  border-bottom:1px solid #00FFFF; border-left:1px solid #00FFFF; }
-    .c.br { bottom:10px; right:10px; border-bottom:1px solid #00FFFF; border-right:1px solid #00FFFF; }
-    #scanline { position: fixed; top:0; left:0; width:100%; height:2px; background:linear-gradient(to right,transparent,rgba(0,255,255,0.08),transparent); animation: scan 6s linear infinite; pointer-events:none; z-index:5; }
-    @keyframes scan { 0%{top:0;opacity:1} 95%{opacity:0.3} 100%{top:100%;opacity:0} }
-    #citycount { position: fixed; top: 80px; right: 22px; font-size: 9px; letter-spacing: 2px; color: #003344; text-align: right; pointer-events: none; }
+    .c { position: fixed; width: 20px; height: 20px; }
+    .c.tl { top:12px; left:12px;  border-top:1px solid #1e3050; border-left:1px solid #1e3050; }
+    .c.tr { top:12px; right:12px; border-top:1px solid #1e3050; border-right:1px solid #1e3050; }
+    .c.bl { bottom:12px; left:12px;  border-bottom:1px solid #1e3050; border-left:1px solid #1e3050; }
+    .c.br { bottom:12px; right:12px; border-bottom:1px solid #1e3050; border-right:1px solid #1e3050; }
+    #scanline { display: none; }
+    #citycount { position: fixed; top: 80px; right: 22px; font-size: 9px; letter-spacing: 2px; color: #253545; text-align: right; pointer-events: none; text-transform: uppercase; }
   </style>
 </head>
 <body>
@@ -42,8 +42,9 @@
   <div id="loading">INITIALISING GLOBE...</div>
 
   <div id="title">
-    <h1>Population Density Globe</h1>
-    <p>Cities &gt; 500K &nbsp;&bull;&nbsp; Source: Wikipedia / CIA World Factbook 2023</p>
+    <h1>Global Population Density</h1>
+    <div id="divider"></div>
+    <p>Metro Areas &gt; 500K &nbsp;&bull;&nbsp; Wikipedia &bull; CIA World Factbook 2023</p>
   </div>
 
   <div id="legend">
@@ -407,7 +408,7 @@
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(W, H);
-  renderer.setClearColor(0x000008);
+  renderer.setClearColor(0x080c14);
   document.getElementById('container').appendChild(renderer.domElement);
 
   window.addEventListener('resize', () => {
@@ -422,7 +423,7 @@
   const starPos = new Float32Array(starCount * 3);
   for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 4000;
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7, transparent: true, opacity: 0.7 });
+  const starMat = new THREE.PointsMaterial({ color: 0x8899aa, size: 0.5, transparent: true, opacity: 0.4 });
   scene.add(new THREE.Points(starGeo, starMat));
 
   // Globe pivot — all globe objects attach here for rotation
@@ -433,27 +434,27 @@
   const R = 200;
   const globeGeo = new THREE.SphereGeometry(R, 64, 64);
   const globeMat = new THREE.MeshPhongMaterial({
-    color: 0x000820,
-    emissive: 0x001030,
+    color: 0x0a1628,
+    emissive: 0x060e1c,
     transparent: true,
-    opacity: 0.92,
+    opacity: 0.97,
     wireframe: false,
   });
   pivot.add(new THREE.Mesh(globeGeo, globeMat));
 
   // Globe wireframe grid overlay (lat/lon lines)
   const wireGeo = new THREE.SphereGeometry(R + 0.5, 36, 18);
-  const wireMat = new THREE.MeshBasicMaterial({ color: 0x003366, wireframe: true, transparent: true, opacity: 0.18 });
+  const wireMat = new THREE.MeshBasicMaterial({ color: 0x0d2040, wireframe: true, transparent: true, opacity: 0.12 });
   pivot.add(new THREE.Mesh(wireGeo, wireMat));
 
   // Outer glow shell
   const glowGeo = new THREE.SphereGeometry(R + 6, 64, 64);
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0x0044aa, transparent: true, opacity: 0.04, side: THREE.BackSide });
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0x102040, transparent: true, opacity: 0.03, side: THREE.BackSide });
   pivot.add(new THREE.Mesh(glowGeo, glowMat));
 
   // Ambient + directional light
-  scene.add(new THREE.AmbientLight(0x112244, 1.2));
-  const sun = new THREE.DirectionalLight(0x4488ff, 1.5);
+  scene.add(new THREE.AmbientLight(0x1a2a3a, 1.4));
+  const sun = new THREE.DirectionalLight(0x8aaac8, 1.2);
   sun.position.set(400, 200, 300);
   scene.add(sun);
 
@@ -470,15 +471,15 @@
     );
   }
 
-  // Map population density → neon colour
-  // cyan(low) → blue → yellow → orange → red → magenta(extreme)
+  // Map population density → scientific colour scale
+  // steel-blue(low) → teal → amber → burnt-orange → crimson → deep-purple(extreme)
   function densityColour(d) {
-    if (d <  1000) return new THREE.Color(0x00ffaa); // cyan-green
-    if (d <  3000) return new THREE.Color(0x00aaff); // blue
-    if (d <  6000) return new THREE.Color(0xffff00); // yellow
-    if (d < 10000) return new THREE.Color(0xff8800); // orange
-    if (d < 20000) return new THREE.Color(0xff2200); // red
-    return           new THREE.Color(0xff00ff);       // magenta (extreme)
+    if (d <  1000) return new THREE.Color(0x1a6b9a); // steel blue
+    if (d <  3000) return new THREE.Color(0x2e7d52); // forest green
+    if (d <  6000) return new THREE.Color(0xc17f24); // amber
+    if (d < 10000) return new THREE.Color(0xb5451b); // burnt orange
+    if (d < 20000) return new THREE.Color(0x922b21); // crimson
+    return           new THREE.Color(0x6c3483);       // deep purple (extreme)
   }
 
   // Bubble radius scaled by metro population (millions), sqrt for visual balance
@@ -499,11 +500,11 @@
     const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
     pivot.add(new THREE.Line(geo, mat));
   }
-  addRing(0,    0x00ffff, 0.35); // equator
-  addRing( 23.5, 0x004466, 0.2); // tropic of cancer
-  addRing(-23.5, 0x004466, 0.2); // tropic of capricorn
-  addRing( 66.5, 0x002233, 0.15); // arctic circle
-  addRing(-66.5, 0x002233, 0.15); // antarctic circle
+  addRing(0,     0x2a4a6a, 0.5);  // equator
+  addRing( 23.5, 0x1a3050, 0.3);  // tropic of cancer
+  addRing(-23.5, 0x1a3050, 0.3);  // tropic of capricorn
+  addRing( 66.5, 0x111e2e, 0.2);  // arctic circle
+  addRing(-66.5, 0x111e2e, 0.2);  // antarctic circle
 
   // Atmospheric rim glow (large back-face shell)
   const atmGeo = new THREE.SphereGeometry(R + 14, 64, 64);
