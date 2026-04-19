@@ -543,40 +543,44 @@
     .then(r => r.json())
     .then(world => {
       const countries = topojson.feature(world, world.objects.countries);
-      drawBorders(countries, 0x2a4a6a, 0.7);
+      drawBorders(countries, 0x5588aa, 1.0);
     });
 
   // --- CITY PINS (height = population, colour = density) ---
-  const cityMeshes = []; // tip spheres for raycasting
+  const cityMeshes = []; // meshes registered for raycasting
 
-  const pinUp = new THREE.Vector3(0, 1, 0); // cylinder default axis
+  const pinUp = new THREE.Vector3(0, 1, 0);
+  const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
 
   window.CITIES.forEach(city => {
-    const normal = latLonToXYZ(city.lat, city.lon, 1); // unit outward vector
-    const base   = normal.clone().multiplyScalar(R);
+    const normal = latLonToXYZ(city.lat, city.lon, 1);
     const col    = densityColour(city.d);
-    const height = 4 + city.pop * 2.8; // linear: 0.5M→5.4u, 37M→107u
+    const height = 4 + city.pop * 2.8;
+    const quat   = new THREE.Quaternion().setFromUnitVectors(pinUp, normal);
 
     const mat = new THREE.MeshPhongMaterial({
       color: col, emissive: col, emissiveIntensity: 0.35,
       transparent: true, opacity: 0.9
     });
 
-    // Shaft — thin cylinder along outward normal
+    // Visible shaft
     const shaftGeo = new THREE.CylinderGeometry(0.45, 0.65, height, 6);
     const shaft    = new THREE.Mesh(shaftGeo, mat);
-
-    // Orient cylinder (Y-up) to point along surface normal
-    const quat = new THREE.Quaternion().setFromUnitVectors(pinUp, normal);
     shaft.quaternion.copy(quat);
-    // Position: centre of cylinder sits at R + height/2 along normal
     shaft.position.copy(normal.clone().multiplyScalar(R + height / 2));
-    shaft.userData = city;
-    cityMeshes.push(shaft);
     pivot.add(shaft);
 
-    // Tip sphere
-    const tipGeo = new THREE.SphereGeometry(1.1, 8, 8);
+    // Invisible fat hit-area cylinder (8x wider) — easy to click/tap
+    const hitGeo  = new THREE.CylinderGeometry(4, 4, height, 6);
+    const hitMesh = new THREE.Mesh(hitGeo, hitMat.clone());
+    hitMesh.quaternion.copy(quat);
+    hitMesh.position.copy(normal.clone().multiplyScalar(R + height / 2));
+    hitMesh.userData = city;
+    cityMeshes.push(hitMesh);
+    pivot.add(hitMesh);
+
+    // Visible tip sphere (larger for easier tapping)
+    const tipGeo = new THREE.SphereGeometry(2.2, 8, 8);
     const tip    = new THREE.Mesh(tipGeo, mat.clone());
     tip.position.copy(normal.clone().multiplyScalar(R + height));
     tip.userData = city;
