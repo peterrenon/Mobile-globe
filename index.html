@@ -82,6 +82,7 @@
   <div id="scanline"></div>
   <div id="citycount"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script>
   // City data: name, country, lat, lon, pop (millions), density/km²
   // Source: Wikipedia / CIA World Factbook 2023
@@ -518,6 +519,32 @@
     color: 0x001155, transparent: true, opacity: 0.04, side: THREE.BackSide
   });
   pivot.add(new THREE.Mesh(atm2Geo, atm2Mat));
+
+  // --- COUNTRY BORDERS ---
+  function drawBorders(geojson, color, opacity) {
+    geojson.features.forEach(f => {
+      const geom = f.geometry;
+      const rings = geom.type === 'Polygon'
+        ? geom.coordinates
+        : geom.type === 'MultiPolygon'
+          ? geom.coordinates.flat()
+          : [];
+      rings.forEach(ring => {
+        const pts = [];
+        ring.forEach(([lon, lat]) => pts.push(latLonToXYZ(lat, lon, R + 0.8)));
+        const geo = new THREE.BufferGeometry().setFromPoints(pts);
+        const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
+        pivot.add(new THREE.Line(geo, mat));
+      });
+    });
+  }
+
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r => r.json())
+    .then(world => {
+      const countries = topojson.feature(world, world.objects.countries);
+      drawBorders(countries, 0x2a4a6a, 0.7);
+    });
 
   // --- CITY BUBBLE CLUSTERS ---
   const cityMeshes = []; // for raycasting tooltips
