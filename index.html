@@ -546,59 +546,42 @@
       drawBorders(countries, 0x2a4a6a, 0.7);
     });
 
-  // --- CITY BUBBLE CLUSTERS ---
-  const cityMeshes = []; // for raycasting tooltips
+  // --- CITY PINS (height = population, colour = density) ---
+  const cityMeshes = []; // tip spheres for raycasting
+
+  const pinUp = new THREE.Vector3(0, 1, 0); // cylinder default axis
 
   window.CITIES.forEach(city => {
-    const base = latLonToXYZ(city.lat, city.lon, R);
-    const col  = densityColour(city.d);
-    const r    = popRadius(city.pop);
-    const group = new THREE.Group();
-    group.position.copy(base);
-    group.lookAt(new THREE.Vector3(0,0,0)); // orient outward
+    const normal = latLonToXYZ(city.lat, city.lon, 1); // unit outward vector
+    const base   = normal.clone().multiplyScalar(R);
+    const col    = densityColour(city.d);
+    const height = 4 + city.pop * 2.8; // linear: 0.5M→5.4u, 37M→107u
 
-    // Main central bubble
-    const mainGeo = new THREE.SphereGeometry(r, 16, 16);
-    const mainMat = new THREE.MeshPhongMaterial({
-      color: col, emissive: col, emissiveIntensity: 0.6,
-      transparent: true, opacity: 0.85
+    const mat = new THREE.MeshPhongMaterial({
+      color: col, emissive: col, emissiveIntensity: 0.35,
+      transparent: true, opacity: 0.9
     });
-    const mainMesh = new THREE.Mesh(mainGeo, mainMat);
-    mainMesh.position.set(0, 0, -r); // sit on globe surface
-    mainMesh.userData = city;
-    cityMeshes.push(mainMesh);
-    group.add(mainMesh);
 
-    // Glow halo around main bubble
-    const haloGeo = new THREE.SphereGeometry(r * 1.8, 16, 16);
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: col, transparent: true, opacity: 0.08, side: THREE.BackSide
-    });
-    const halo = new THREE.Mesh(haloGeo, haloMat);
-    halo.position.copy(mainMesh.position);
-    group.add(halo);
+    // Shaft — thin cylinder along outward normal
+    const shaftGeo = new THREE.CylinderGeometry(0.45, 0.65, height, 6);
+    const shaft    = new THREE.Mesh(shaftGeo, mat);
 
-    // Satellite micro-bubbles (count scales with population)
-    const satCount = Math.min(6, Math.floor(city.pop / 2));
-    for (let i = 0; i < satCount; i++) {
-      const angle  = (i / satCount) * Math.PI * 2;
-      const spread = r * 1.6;
-      const sr     = r * 0.35;
-      const satGeo = new THREE.SphereGeometry(sr, 8, 8);
-      const satMat = new THREE.MeshPhongMaterial({
-        color: col, emissive: col, emissiveIntensity: 0.5,
-        transparent: true, opacity: 0.7
-      });
-      const sat = new THREE.Mesh(satGeo, satMat);
-      sat.position.set(
-        Math.cos(angle) * spread,
-        Math.sin(angle) * spread,
-        -r * 0.6
-      );
-      group.add(sat);
-    }
+    // Orient cylinder (Y-up) to point along surface normal
+    const quat = new THREE.Quaternion().setFromUnitVectors(pinUp, normal);
+    shaft.quaternion.copy(quat);
+    // Position: centre of cylinder sits at R + height/2 along normal
+    shaft.position.copy(normal.clone().multiplyScalar(R + height / 2));
+    shaft.userData = city;
+    cityMeshes.push(shaft);
+    pivot.add(shaft);
 
-    pivot.add(group);
+    // Tip sphere
+    const tipGeo = new THREE.SphereGeometry(1.1, 8, 8);
+    const tip    = new THREE.Mesh(tipGeo, mat.clone());
+    tip.position.copy(normal.clone().multiplyScalar(R + height));
+    tip.userData = city;
+    cityMeshes.push(tip);
+    pivot.add(tip);
   });
 
   // --- MOUSE INTERACTION ---
@@ -667,18 +650,9 @@
   }, { passive: false });
 
   // --- ANIMATION LOOP ---
-  let frame = 0;
   function animate() {
     requestAnimationFrame(animate);
-    frame++;
     if (autoRotate) pivot.rotation.y += 0.0008;
-    // Pulse the bubble halos slightly
-    if (frame % 2 === 0) {
-      cityMeshes.forEach((m, i) => {
-        const s = 1 + Math.sin(frame * 0.03 + i * 0.4) * 0.04;
-        m.scale.setScalar(s);
-      });
-    }
     renderer.render(scene, camera);
   }
   animate();
